@@ -1,5 +1,5 @@
 export const storeContact = {
-  whatsapp: (import.meta.env.VITE_WHATSAPP_FALLBACK ?? '').replace(/\D/g, ''),
+  whatsapp: import.meta.env.VITE_WHATSAPP_FALLBACK?.replace(/\D/g, '') || '559691990583',
   instagram: instagramUrl(import.meta.env.VITE_INSTAGRAM_URL),
   hours: import.meta.env.VITE_SERVICE_HOURS?.trim(),
   delivery: import.meta.env.VITE_DELIVERY_INFO?.trim(),
