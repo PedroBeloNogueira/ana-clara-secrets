@@ -1,32 +1,56 @@
 import Drawer from './Drawer'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Minus, Plus, Trash2, X } from 'lucide-react'
 import { useStore } from '../contexts/StoreContext'
 import { brl, priceOf } from '../utils/format'
-export default function CartDrawer(){
- const {cart,products,cartOpen,setCartOpen,setQty,remove,total}=useStore()
- const navigate=useNavigate()
- // Revalida itens com o catálogo atual: indisponíveis ficam fora do pedido.
- const rows=cart.map(i=>({i,p:products.find(x=>x.id===i.productId)})).filter(r=>r.p)
- const valid=rows.filter(r=>r.p!.available).map(r=>r.i)
- const close=()=>setCartOpen(false)
- return <Drawer open={cartOpen} close={close} label="Carrinho"><header className="flex items-center justify-between border-b border-petala p-5"><h2 className="text-2xl">Seu carrinho</h2>
-    <button onClick={close} aria-label="Fechar"><X/></button></header>
-   <div className="flex-1 space-y-4 overflow-y-auto p-5">
-    {rows.length===0&&<p>Seu carrinho está vazio. Explore o catálogo e escolha seus perfumes.</p>}
-    {rows.map(({i,p})=><div key={i.productId} className="flex gap-3 border-b border-petala bg-[var(--panel)] p-3">
-     <img src={p!.image} alt={p!.name} className="h-20 w-16  object-cover"/>
-     <div className="flex-1"><p className="leading-tight">{p!.name}</p><p className="text-sm">{brl(priceOf(p!))}</p>
-      {!p!.available&&<p className="text-xs text-peonia">Esgotado — não entra no pedido</p>}
-      <div className="mt-2 flex items-center gap-2">
-       <button aria-label="Diminuir" onClick={()=>setQty(i.productId,i.qty-1)}><Minus className="h-4 w-4"/></button><span>{i.qty}</span>
-       <button aria-label="Aumentar" onClick={()=>setQty(i.productId,i.qty+1)}><Plus className="h-4 w-4"/></button>
-       <button aria-label="Remover" className="ml-auto" onClick={()=>remove(i.productId)}><Trash2 className="h-4 w-4"/></button></div></div>
-     <p className="font-medium">{brl(priceOf(p!)*i.qty)}</p></div>)}
-   </div>
-   {rows.length>0&&<footer className="space-y-3 border-t border-petala p-5">
-    <p className="flex justify-between text-lg"><span>Total</span><strong>{brl(total)}</strong></p>
-    <button className="btn-primary w-full" disabled={!valid.length} onClick={()=>{close();navigate('/checkout')}}>Continuar para entrega</button>
-    <button className="btn-ghost w-full" onClick={close}>Continuar comprando</button>
-   </footer>}
-  </Drawer>}
+import { productPath } from '../utils/routes'
+
+export function CartContents({ close }: { close?: () => void }) {
+  const { cart, products, setQty, remove, total } = useStore()
+  const rows = cart.map(item => ({ item, product: products.find(p => p.id === item.productId) }))
+
+  return <>
+    <div className={close ? 'flex-1 space-y-4 overflow-y-auto p-5' : 'space-y-4'}>
+      {!rows.length && <p>Seu carrinho está vazio.</p>}
+      {rows.map(({ item, product }) => {
+        const name = product?.name ?? 'Produto removido da vitrine'
+        return <div key={item.productId} className="cart-row">
+          {product && <Link to={productPath(product.slug)} onClick={close} aria-label={'Ver ' + name}><img src={product.image} alt=""/></Link>}
+          <div className="grow">
+            {product ? <Link to={productPath(product.slug)} onClick={close}>{name}</Link> : <p>{name}</p>}
+            {product && <p className="text-sm">{brl(priceOf(product))} por unidade</p>}
+            {!product?.available && <p className="text-sm">{product?.available === false ? 'Esgotado' : 'Indisponível para o pedido'}</p>}
+            <div className="cart-quantity">
+              <button aria-label={'Diminuir quantidade de ' + name} onClick={() => setQty(item.productId, item.qty - 1)}><Minus size={16}/></button>
+              <span>{item.qty}</span>
+              <button aria-label={'Aumentar quantidade de ' + name} disabled={!product?.available} onClick={() => setQty(item.productId, item.qty + 1)}><Plus size={16}/></button>
+              <button aria-label={'Remover ' + name} onClick={() => remove(item.productId)}><Trash2 size={16}/></button>
+            </div>
+          </div>
+          {product?.available && <strong>{brl(priceOf(product) * item.qty)}</strong>}
+        </div>
+      })}
+    </div>
+    <div className={close ? 'space-y-3 border-t border-petala p-5' : 'cart-summary'}>
+      {rows.length > 0 && <p className="checkout-total"><span>Total dos produtos</span><strong>{brl(total)}</strong></p>}
+      <div className="store-actions">
+        {rows.some(({ product }) => product?.available) &&
+          <Link className="btn-primary" to="/checkout" onClick={close}>Continuar para entrega</Link>}
+        {close ? <button className="btn-ghost" onClick={close}>Continuar comprando</button> :
+          <Link className="btn-ghost" to="/#produtos">Explorar perfumes</Link>}
+      </div>
+    </div>
+  </>
+}
+
+export default function CartDrawer() {
+  const { cartOpen, setCartOpen } = useStore()
+  const close = () => setCartOpen(false)
+  return <Drawer open={cartOpen} close={close} label="Carrinho">
+    <header className="flex items-center justify-between border-b border-petala p-5">
+      <h2 className="text-2xl">Seu carrinho</h2>
+      <button onClick={close} aria-label="Fechar carrinho"><X/></button>
+    </header>
+    <CartContents close={close}/>
+  </Drawer>
+}

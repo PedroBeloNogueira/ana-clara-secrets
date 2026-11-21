@@ -1,7 +1,8 @@
 import { BRAND_NAME } from '../data/brand'
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { MessageCircle } from 'lucide-react'
+import PageMeta from '../components/PageMeta'
 import { useStore } from '../contexts/StoreContext'
 import { brl, priceOf } from '../utils/format'
 import { waLink } from '../utils/whatsapp'
@@ -20,7 +21,15 @@ function maskPhone(value: string) {
 }
 
 export default function Checkout() {
+  const [params] = useSearchParams()
+  const slug = params.get('produto')
+  return <CheckoutOrder key={slug ?? ''} slug={slug}/>
+}
+
+function CheckoutOrder({ slug }: { slug: string | null }) {
   const { cart, products, setCartOpen, whatsapp } = useStore()
+  const directProduct = slug === null ? undefined : products.find(p => p.slug === slug && p.available)
+  const order = slug === null ? cart : directProduct ? [{ productId: directProduct.id, qty: 1 }] : []
   const [data, setData] = useState(initial)
   const [mode, setMode] = useState<Delivery>('Entrega')
   const [noNumber, setNoNumber] = useState(false)
@@ -30,7 +39,7 @@ export default function Checkout() {
   const filledByCep = useRef<Partial<typeof initial>>({})
   const title = useRef<HTMLHeadingElement>(null)
   useEffect(() => () => lookup.current?.abort(), [])
-  const rows = cart.flatMap(item => {
+  const rows = order.flatMap(item => {
     const p = products.find(product => product.id === item.productId && product.available)
     if (!p || !Number.isSafeInteger(item.qty) || item.qty < 1) return []
     const unit = priceOf(p)
@@ -118,8 +127,13 @@ export default function Checkout() {
       onChange={e=>update(key,e.target.value)} /></label>
   }
 
-  if (!rows.length) return <section className="checkout"><h1>Carrinho sem produtos disponíveis</h1><Link className="btn-primary" to="/#produtos">Explorar perfumes</Link></section>
+  const meta = <PageMeta title="Checkout" description="Informe seus dados de entrega ou retirada e revise o pedido antes de enviá-lo pelo WhatsApp."/>
+  if (!rows.length) return <section className="checkout">{meta}
+    <h1>{slug === null ? 'Carrinho sem produtos disponíveis' : 'Perfume indisponível para compra'}</h1>
+    <Link className="btn-primary" to="/#produtos">Explorar perfumes</Link>
+  </section>
   return <section className="checkout">
+    {meta}
     <ol className="checkout-progress" aria-label="Etapas do pedido">{['Carrinho','Endereço','Revisão','WhatsApp'].map((name,i)=>
       <li key={name} aria-current={i===(review?2:1)?'step':undefined}>{name}</li>)}</ol>
     <h1 ref={title} tabIndex={-1}>{review?'Revisão do pedido':'Dados de entrega'}</h1>
@@ -128,7 +142,7 @@ export default function Checkout() {
         <div><strong>{p.name}</strong>{(p.brand || p.volumeMl) && <p>{[p.brand,p.volumeMl && p.volumeMl+' ml'].filter(Boolean).join(' · ')}</p>}<p>{qty} × {brl(unit)}</p></div><b>{brl(cents/100)}</b></li>)}</ul>
       <p className="checkout-total">Total dos produtos <strong>{brl(total)}</strong></p>
       {rows.some(({p})=>p.isDemo) && <p>Confirme os preços e a disponibilidade com a loja antes de concluir o pedido.</p>}
-      <button className="checkout-link" onClick={()=>setCartOpen(true)}>Modificar carrinho</button>
+      {slug === null && <button className="checkout-link" onClick={()=>setCartOpen(true)}>Modificar carrinho</button>}
       <h2>{delivery?'Endereço de entrega':'Dados para retirada'}</h2>
       <dl className="checkout-address">{address.map(([key,value])=><div key={key}><dt>{key}</dt><dd>{value}</dd></div>)}</dl>
       <button className="checkout-link" onClick={()=>changeStep(false)}>Editar dados</button>
@@ -138,6 +152,7 @@ export default function Checkout() {
         <p>Toque em Enviar no WhatsApp para encaminhar o pedido à loja.</p>
       </> : <details><summary>Ver mensagem de demonstração</summary><p>O WhatsApp da loja ainda não foi configurado.</p><pre>{message}</pre></details>}
     </> : <form onSubmit={e=>{e.preventDefault();changeStep(true)}}>
+      {directProduct && <p><strong>{directProduct.name}</strong> · 1 unidade</p>}
       <p>Seus dados serão utilizados para organizar a {delivery?'entrega':'retirada'} do pedido.</p>
       <fieldset><legend>Como deseja receber?</legend>{(['Entrega','Retirada'] as Delivery[]).map(m=>
         <label className="checkout-choice" key={m}><input type="radio" name="mode" checked={mode===m} onChange={()=>setMode(m)}/>{m}</label>)}</fieldset>

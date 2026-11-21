@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { CartItem, Product } from '../types'
 import { DEMO_PRODUCTS } from '../data/demo'
+import { storeContact } from '../data/contact'
 import { priceOf } from '../utils/format'
 const load=<T,>(k:string,d:T):T=>{try{return JSON.parse(localStorage.getItem(k)??'')as T}catch{return d}}
 interface Ctx{products:Product[];cart:CartItem[];favs:string[];cartOpen:boolean;setCartOpen:(b:boolean)=>void;
@@ -17,7 +18,7 @@ export function StoreProvider({children}:{children:ReactNode}){
  useEffect(()=>localStorage.setItem('acs_cart',JSON.stringify(cart)),[cart])
  useEffect(()=>localStorage.setItem('acs_favs',JSON.stringify(favs)),[favs])
  const say=(m:string)=>{setToast(m);setTimeout(()=>setToast(''),2000)}
- const v:Ctx=useMemo(()=>({products,cart,favs,cartOpen,setCartOpen,toast,whatsapp:import.meta.env.VITE_WHATSAPP_FALLBACK??'',
+ const v:Ctx=useMemo(()=>({products,cart,favs,cartOpen,setCartOpen,toast,whatsapp:storeContact.whatsapp,
   add:(id,q=1)=>{setCart(c=>c.some(i=>i.productId===id)?c.map(i=>i.productId===id?{...i,qty:i.qty+q}:i):[...c,{productId:id,qty:q}]);say('Adicionado ao carrinho')},
   setQty:(id,q)=>setCart(c=>q<1?c.filter(i=>i.productId!==id):c.map(i=>i.productId===id?{...i,qty:q}:i)),
   remove:id=>setCart(c=>c.filter(i=>i.productId!==id)),

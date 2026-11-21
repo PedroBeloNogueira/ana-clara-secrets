@@ -1,30 +1,30 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Home, Grid2X2, Sparkles, Info, MessageCircle, ShoppingBag } from 'lucide-react'
+import { Home, Info, MessageCircle, ShoppingBag } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useStore } from '../contexts/StoreContext'
 
 const tabs = [
   { name: 'Início', icon: Home, to: '/' },
-  { name: 'Produtos', icon: Grid2X2, to: '/#produtos' },
-  { name: 'Novidades', icon: Sparkles, to: '/#novidades' },
-  { name: 'Sobre', icon: Info, to: '/#sobre' },
-  { name: 'Contato', icon: MessageCircle, to: '/#contato' },
-  { name: 'Carrinho', icon: ShoppingBag, to: '' },
+  { name: 'Sobre', icon: Info, to: '/sobre' },
+  { name: 'Contato', icon: MessageCircle, to: '/contato' },
+  { name: 'Carrinho', icon: ShoppingBag, to: '/carrinho' },
 ]
+const cartPath = '/carrinho'
+const cartTab = tabs.findIndex(tab => tab.to === cartPath)
 const clamp = (value: number) => Math.max(0, Math.min(tabs.length - 1, value))
 
 export default function IslandNav() {
-  const { pathname, hash } = useLocation()
+  const { pathname } = useLocation()
   const navigate = useNavigate()
-  const { cartOpen, setCartOpen, count } = useStore()
+  const { cartOpen, count } = useStore()
   const [compact, setCompact] = useState(false)
-  const [section, setSection] = useState(0)
   const [drag, setDrag] = useState<number | null>(null)
   const nav = useRef<HTMLElement>(null)
   const indicator = useRef<HTMLSpanElement>(null)
   const gesture = useRef<{ x: number; y: number; start: number; offset: number; moved: boolean } | null>(null)
   const suppressClick = useRef(false)
-  const active = cartOpen || pathname === '/checkout' ? 5 : section
+  const routeTab = tabs.findIndex(tab => tab.to === pathname)
+  const active = cartOpen || pathname === '/checkout' ? cartTab : Math.max(routeTab, 0)
   const physics = useRef({ position: active, velocity: 0 })
 
   useEffect(() => {
@@ -35,20 +35,12 @@ export default function IslandNav() {
         setCompact(y > 80 && y > last)
         last = y
       }
-      if (pathname !== '/') return
-      const top = (id: string) => document.getElementById(id)?.getBoundingClientRect().top ?? Infinity
-      const bottom = y > 0 && y + innerHeight >= document.documentElement.scrollHeight - 3
-      if (top('contato') <= 112 || bottom) setSection(hash === '#sobre' ? 3 : 4)
-      else if (top('sobre') <= 112) setSection(3)
-      else if (top('produtos') <= 112) setSection(1)
-      else if (top('novidades') <= 112) setSection(2)
-      else setSection(0)
     }
     track()
     window.addEventListener('scroll', track, { passive: true })
     window.addEventListener('resize', track)
     return () => { window.removeEventListener('scroll', track); window.removeEventListener('resize', track) }
-  }, [pathname, hash])
+  }, [pathname])
 
   useLayoutEffect(() => {
     const node = indicator.current
@@ -85,11 +77,8 @@ export default function IslandNav() {
 
   function select(index: number) {
     const to = tabs[index].to
-    if (to) {
-      navigate(to)
-      if (to === '/') window.scrollTo(0, 0)
-      else if (pathname === '/') document.getElementById(to.split('#')[1])?.scrollIntoView()
-    } else setCartOpen(true)
+    navigate(to)
+    if (to === '/') window.scrollTo(0, 0)
   }
 
   return <header className="island-anchor"><div className="island-shell" data-compact={compact}>
@@ -135,11 +124,11 @@ export default function IslandNav() {
       <span ref={indicator} className="island-indicator" aria-hidden="true"/>
       {tabs.map(({name,icon:Icon,to}, index) => {
         const selected = index === active
-        const content = <><Icon size={19} aria-hidden="true"/><span>{name}</span>{index===5 && count>0 && <small>{count}</small>}</>
-        return to ? <Link key={name} className="island-tab" data-tab={index} data-active={selected} to={to} aria-label={name}
-          aria-current={selected ? 'location' : undefined} onClick={() => { if(to==='/') window.scrollTo(0,0); else if(pathname === '/') document.getElementById(to.split('#')[1])?.scrollIntoView() }}>{content}</Link> :
-          <button key={name} className="island-tab" data-tab={index} data-active={selected} aria-label={'Carrinho, '+count+' itens'}
-            aria-haspopup="dialog" onClick={() => select(index)}>{content}</button>
+        const content = <><Icon size={19} aria-hidden="true"/><span>{name}</span>{to === cartPath && count>0 && <small>{count}</small>}</>
+        return <Link key={name} className="island-tab" data-tab={index} data-active={selected} to={to}
+          aria-label={to === cartPath ? name + ', ' + count + ' itens' : name}
+          aria-current={selected ? 'location' : undefined}
+          onClick={() => { if (to === '/') window.scrollTo(0, 0) }}>{content}</Link>
       })}
     </nav>
   </div></header>

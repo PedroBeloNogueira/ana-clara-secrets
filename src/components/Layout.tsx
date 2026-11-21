@@ -5,18 +5,20 @@ import { Heart, MessageCircle, Search } from 'lucide-react'
 import IslandNav from './IslandNav'
 import CartDrawer from './CartDrawer'
 import { useStore } from '../contexts/StoreContext'
+import { contactMessage, storeContact } from '../data/contact'
 import { waLink } from '../utils/whatsapp'
 
 export default function Layout() {
   const { whatsapp, toast } = useStore()
-  const { pathname, hash } = useLocation()
+  const { pathname, hash, key } = useLocation()
+  const searchFocusKey = hash === '#pesquisar' ? key : ''
   useEffect(() => {
     const target = document.getElementById(hash.slice(1))
     if (target) target.scrollIntoView()
-    else window.scrollTo(0,0)
+    else window.scrollTo({ top: 0, behavior: 'instant' })
     if (hash === '#pesquisar') target?.focus({preventScroll:true})
-  }, [pathname, hash])
-  const contact = whatsapp.replace(/\D/g,'') && waLink(whatsapp,'Olá! Gostaria de saber mais sobre os produtos.')
+  }, [pathname, hash, searchFocusKey])
+  const contact = whatsapp.replace(/\D/g,'') && waLink(whatsapp, contactMessage)
   return <>
     <IslandNav/>
     <div className="shop-tools">
@@ -25,10 +27,14 @@ export default function Layout() {
       <Link aria-label="Favoritos" to="/?favoritos=1#produtos"><Heart size={20}/></Link>
     </div>
     <main><Outlet/></main>
-    <footer id="contato" className="institution"><div><p className="wordmark">{BRAND_NAME}</p><p id="sobre">Perfumaria e beleza</p></div>
-      <nav aria-label="Rodapé"><Link to="/#produtos">Produtos</Link><Link to="/?favoritos=1#produtos">Favoritos</Link><Link to="/?categoria=Novidades#produtos">Lançamentos</Link></nav>
-      <div id="entrega"><h2>Entrega e retirada</h2><p>Consulte o frete pelo CEP ou combine a retirada com a loja.</p></div>
-      <div><h2>Contato</h2>{contact ? <a href={contact} target="_blank" rel="noreferrer">Conversar pelo WhatsApp</a> : <p>Atendimento pelo WhatsApp em breve.</p>}</div></footer>
+    <footer className="institution">
+      <div><p className="wordmark">{BRAND_NAME}</p><p>Perfumaria e beleza</p></div>
+      <div className="footer-contact">
+        {contact && <a href={contact} target="_blank" rel="noreferrer">WhatsApp +{whatsapp}</a>}
+        {storeContact.instagram && <a href={storeContact.instagram} target="_blank" rel="noreferrer">Instagram</a>}
+        <p>© {new Date().getFullYear()} Ana Clara’s Secret</p>
+      </div>
+    </footer>
     {contact && <a className="floating" href={contact} aria-label="Conversar pelo WhatsApp" target="_blank" rel="noreferrer"><MessageCircle/></a>}
     <CartDrawer/><div className={'toast '+(toast ? 'visible' : '')} role="status">{toast}</div>
   </>

@@ -9,5 +9,7 @@ Pronto: design system (paleta/tipografia), header, home, catálogo (busca, famí
 Dados são **demonstrativos** (`src/data/demo.ts`). Defina o número em `VITE_WHATSAPP_FALLBACK` (só dígitos com DDI) até ele vir de `store_settings`.
 ## Próximas etapas
 1. Supabase: rodar `supabase/schema.sql`, criar bucket `media`, criar `src/lib/supabase.ts` e `services/products.ts`, trocar `DEMO_PRODUCTS` no `StoreContext`. Use só a anon key no front; RLS já restringe escrita a `admins`.
-2. Painel `/admin` (Supabase Auth + CRUD com React Hook Form/Zod), página de produto, quiz, banners, páginas legais.
-3. Deploy na Vercel/Netlify com as variáveis de ambiente.
+2. Painel `/admin` (Supabase Auth + CRUD com React Hook Form/Zod), quiz, banners, páginas legais.
+3. Deploy na Vercel ou Netlify com as variáveis de ambiente. As duas configurações incluídas encaminham as rotas do React para o HTML da loja. Em outra hospedagem estática, configure fallback para `index.html` em URLs sem arquivo.
+
+`VITE_INSTAGRAM_URL`, `VITE_SERVICE_HOURS` e `VITE_DELIVERY_INFO` são opcionais e aparecem no Contato quando configuradas.

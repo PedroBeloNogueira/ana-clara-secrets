@@ -1,7 +1,7 @@
 import type { Product } from '../types'
 // DADOS DEMONSTRATIVOS — substituir pelo catálogo real (tabela products no Supabase).
 const p=(i:number,name:string,family:Product['family'],intensity:Product['intensity'],price:number,extra:Partial<Product>={}):Product=>({
- id:`demo-${i}`,slug:`demo-${i}`,name,isDemo:true,price,image:'/images/rosa-'+i+'.jpg',
+ id:`demo-${i}`,slug:name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ +/g, '-'),name,isDemo:true,price,image:'/images/rosa-'+i+'.jpg',
  description:'',category:'Perfumes',family,intensity,
  occasions:['dia a dia','encontros'],available:true,...extra})
 export const DEMO_PRODUCTS:Product[]=[
