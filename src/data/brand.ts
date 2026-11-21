@@ -1,0 +1,1 @@
+export const BRAND_NAME = 'ANA CLARA’S SECRET'
