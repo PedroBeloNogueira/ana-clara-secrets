@@ -95,7 +95,8 @@ h1,h2,h3,.wordmark { @apply font-serif; }
 .glitter { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:0 }
 .storefront { position:relative; z-index:1; min-height:100vh; animation:reveal 1.1s ease-in-out 2.7s backwards }
 @keyframes reveal { from {opacity:0} to {opacity:1} }
-#root::before { content:""; position:fixed; inset:0; z-index:-1; background:#f9dbe7; animation:reveal 1.1s ease-in-out 2.7s backwards; pointer-events:none }
+#root::before { content:""; position:fixed; inset:0; z-index:-1; background:#f9dbe7; pointer-events:none }
+#root:has(.storefront)::before { animation:reveal 1.1s ease-in-out 2.7s backwards }
 .opening-signature { position:fixed; inset:0; z-index:2; pointer-events:none; display:grid; place-items:center; overflow:hidden; animation:retire-intro 1.1s ease-in-out 2.7s forwards }
 .opening-name {
   font-family: var(--brand-display);
@@ -112,7 +113,7 @@ h1,h2,h3,.wordmark { @apply font-serif; }
 .opening-name span { display:block; font-size:1.08em }
 @keyframes name-reveal { from {opacity:0; transform:scale(1.055)} to {opacity:1; transform:scale(1)} }
 @keyframes retire-intro { to { opacity:0; transform:scale(.97); visibility:hidden } }
-@media(prefers-reduced-motion:reduce){.opening-signature,.glitter{display:none}.storefront,#root::before{animation:none}}
+@media(prefers-reduced-motion:reduce){.opening-signature,.glitter{display:none}.storefront,#root:has(.storefront)::before{animation:none}}
 
 /* Floating primary navigation */
 .island-anchor { position:fixed; z-index:36; inset: max(10px,env(safe-area-inset-top)) 0 auto; display:flex; justify-content:center; pointer-events:none }
@@ -165,7 +166,7 @@ h1,h2,h3,.wordmark { @apply font-serif; }
 .checkout-link,.checkout summary { text-decoration:underline; text-underline-offset:4px; color:#ffd2e6; cursor:pointer; min-height:44px; text-align:left }
 .checkout fieldset { margin:12px 0 18px }
 .checkout-items li { display:grid; grid-template-columns:64px 1fr auto; gap:12px; align-items:center; padding:14px 0; border-bottom:1px solid #51434c }
-.checkout-items img { width:64px; height:80px; object-fit:cover; border-radius:6px }
+.checkout-items img { width:64px; height:80px; object-fit:contain; background:#342c33; border-radius:6px }
 .checkout-total { display:flex; justify-content:space-between; gap:10px; padding-top:15px }
 .checkout-address { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px }
 .checkout-address dt { font-size:.85rem; color:#dfb7ca }
@@ -222,11 +223,11 @@ h1,h2,h3,.wordmark { @apply font-serif; }
 .product-thumbnails { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px }
 .product-thumbnails button { width: 68px; height: 68px; border: 2px solid var(--line); border-radius: 8px; overflow: hidden }
 .product-thumbnails button[aria-pressed=true] { border-color: var(--accent) }
-.product-thumbnails img { width: 100%; height: 100%; object-fit: cover }
+.product-thumbnails img { width: 100%; height: 100%; object-fit: contain; background: var(--panel) }
 .store-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 18px }
 .related-products { margin-block: clamp(32px, 6vw, 65px) }
 .cart-row { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line) }
-.cart-row img { width: 64px; height: 76px; object-fit: cover; border-radius: 6px }
+.cart-row img { width: 64px; height: 76px; object-fit: contain; background: var(--panel); border-radius: 6px }
 .cart-quantity { display: flex; gap: 5px; align-items: center }
 .cart-quantity button { min-width: 44px; min-height: 44px; display: grid; place-items: center; border-radius: 8px }
 .cart-quantity button:hover:not(:disabled) { background: rgb(255 196 221 / 13%) }
@@ -287,3 +288,54 @@ h1,h2,h3,.wordmark { @apply font-serif; }
 .welcome-brand { font: 400 1rem var(--brand-display); letter-spacing: .085em }
 .welcome-kicker { margin-top: 20px; font: italic 400 1.35rem var(--brand-display) }
 .welcome-card h2 { margin: 4px 0 22px; font: 400 clamp(2.4rem, 9vw, 3.6rem)/1.04 var(--brand-display) }
+
+.admin-shell {
+  max-width: 1120px;
+  min-height: 85vh;
+  margin: 0 auto;
+  padding: clamp(14px, 4vw, 45px);
+  color: #42172b;
+  font-family: Arial, sans-serif;
+}
+.admin-shell h1, .admin-shell h2 { font-family: var(--brand-display); line-height: 1.12 }
+.admin-shell h1 { font-size: clamp(2rem, 5vw, 3.35rem); margin-bottom: 16px }
+.admin-shell h2 { font-size: clamp(1.6rem, 4vw, 2.35rem); margin-bottom: 16px }
+.admin-header, .admin-tabs, .admin-section-title, .admin-row-actions, .admin-category-form {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.admin-header, .admin-tabs { margin-bottom: 22px }
+.admin-section-title { justify-content: space-between; margin-bottom: 12px }
+.admin-section-title h1 { margin: 0 }
+.admin-card {
+  padding: clamp(14px, 3vw, 24px);
+  background: #fff1f6;
+  border: 1px solid #d8a4b9;
+  border-radius: 16px;
+}
+.admin-login { max-width: 450px; margin-inline: auto; display: grid; gap: 12px }
+.admin-shell label { display: grid; gap: 6px; min-width: 0; font-weight: 600 }
+.admin-shell label input:not([type=checkbox]), .admin-shell select, .admin-shell textarea {
+  width: 100%; min-width: 0; padding: 10px; min-height: 44px; background: #fffaff;
+  border: 1px solid #b68199; border-radius: 8px; color: #42172b; font-weight: 400;
+}
+.admin-shell input[type=checkbox] { accent-color: #88254c }
+.admin-fields { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)) }
+.admin-fields .admin-check { display: flex; align-items: center; align-self: end; min-height: 44px }
+.admin-wide { grid-column: 1 / -1 }
+.admin-form h3, .admin-list, .admin-category-list { margin-top: 18px }
+.admin-form h3 { font-size: 1.2rem }
+.admin-form fieldset > p { margin-bottom: 10px }
+.admin-photo { display: grid; gap: 5px; margin-top: 10px; width: min(100%, 110px) }
+.admin-photo img, .admin-list img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #f5dce7; border-radius: 8px }
+.admin-photo button { min-height: 44px; text-decoration: underline }
+.admin-photos { display: flex; gap: 10px; flex-wrap: wrap }
+.admin-list li { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding-block: 12px; border-top: 1px solid #d8a4b9 }
+.admin-list img { width: 68px }
+.admin-list li > div:first-of-type { flex: 1 1 150px; overflow-wrap: anywhere }
+.admin-category-form { align-items: end; padding-block: 8px }
+.admin-category-form label { flex: 1 1 200px }
+.admin-stats { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 148px), 1fr)) }
+.admin-stats dd { font-size: 2rem; color: #88254c }
+.admin-feedback { padding: 12px; margin: 12px 0; background: #fff1f6; border-radius: 8px }
+.admin-shell .btn-primary, .admin-shell .btn-ghost { border-radius: 9px }
+@media (max-width: 480px) { .admin-header .wordmark { flex-basis: 100% } }

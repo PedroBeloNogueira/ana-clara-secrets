@@ -10,7 +10,7 @@ import { collections, matchesCollection } from '../data/collections'
 const normalize = (text: string) => text.trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
 export default function ProductShelf() {
-  const { products, favs } = useStore()
+  const { products, favs, categories: savedCategories, catalogLoading, catalogError } = useStore()
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const [limit, setLimit] = useState(24)
@@ -47,13 +47,14 @@ export default function ProductShelf() {
     && matchesCollection(p,get('categoria')) && (!get('familia') || p.family === get('familia'))
     && priceOf(p) >= Number(get('min')) && (!get('max') || priceOf(p) <= Number(get('max'))))
     .sort((a,b) => {
+      if (sort === 'nome' && !!a.featured !== !!b.featured) return Number(!!b.featured) - Number(!!a.featured)
       if (sort === 'menor') return priceOf(a)-priceOf(b)
       if (sort === 'maior') return priceOf(b)-priceOf(a)
       if (sort === 'novos') return Number(!!b.isNew)-Number(!!a.isNew)
       if (sort === 'vendidos') return Number(!!b.bestSeller)-Number(!!a.bestSeller)
       return a.name.localeCompare(b.name,'pt-BR')
     })
-  const categories = [...new Set([...collections.map(c => c.name), ...products.map(p => p.category)])]
+  const categories = [...new Set([...savedCategories, ...(products.some(p => p.isDemo) ? collections.map(c => c.name) : []), ...products.map(p => p.category)])]
   return <section id="produtos" aria-label="Pesquisa e vitrine">
     <div role="search" className="shelf-search">
       <label><Search size={18}/><input aria-label="Pesquisar por nome ou marca" id="pesquisar" type="search" placeholder="Pesquisar por nome ou marca" value={get('q')} onChange={e=>update('q',e.target.value)}/></label>
@@ -77,6 +78,6 @@ export default function ProductShelf() {
     </Drawer>
     <h2>Encontre a fragrância perfeita para você.</h2>
     {products.some(p=>p.isDemo) && <p className="shelf-note">Vitrine de demonstração: produtos, preços e disponibilidade sujeitos à confirmação.</p>}
-    {filtered.length ? <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{filtered.slice(0,limit).map(p => <ProductCard key={p.id} p={p}/>)}</div> :
+    {catalogError ? <p role="alert">{catalogError}</p> : catalogLoading ? <p role="status">Carregando perfumes…</p> : filtered.length ? <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{filtered.slice(0,limit).map(p => <ProductCard key={p.id} p={p}/>)}</div> :
       <div className="py-8"><h2>Nenhum produto encontrado</h2><p className="mb-5">Experimente outra busca ou veja a coleção completa.</p></div>}{filtered.length > limit && <button className="btn-ghost mt-4" onClick={()=>setLimit(limit+24)}>Mostrar mais produtos</button>}</section>
 }

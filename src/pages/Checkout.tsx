@@ -27,7 +27,7 @@ export default function Checkout() {
 }
 
 function CheckoutOrder({ slug }: { slug: string | null }) {
-  const { cart, products, setCartOpen, whatsapp } = useStore()
+  const { cart, products, setCartOpen, whatsapp, catalogLoading, catalogError } = useStore()
   const directProduct = slug === null ? undefined : products.find(p => p.slug === slug && p.available)
   const order = slug === null ? cart : directProduct ? [{ productId: directProduct.id, qty: 1 }] : []
   const [data, setData] = useState(initial)
@@ -43,8 +43,10 @@ function CheckoutOrder({ slug }: { slug: string | null }) {
     const p = products.find(product => product.id === item.productId && product.available)
     if (!p || !Number.isSafeInteger(item.qty) || item.qty < 1) return []
     const unit = priceOf(p)
-    return [{ p, qty:item.qty, unit, cents:Math.round(unit * 100) * item.qty }]
+    const qty = Math.min(item.qty, p.stock ?? Infinity)
+    return [{ p, qty, unit, cents: Math.round(unit * 100) * qty }]
   })
+  const adjustedOrder = order.length !== rows.length || rows.some(row => row.qty !== order.find(item => item.productId === row.p.id)?.qty)
   const total = rows.reduce((sum,row) => sum+row.cents,0)/100
   const delivery = mode === 'Entrega'
   const address = [
@@ -128,12 +130,14 @@ function CheckoutOrder({ slug }: { slug: string | null }) {
   }
 
   const meta = <PageMeta title="Checkout" description="Informe seus dados de entrega ou retirada e revise o pedido antes de enviá-lo pelo WhatsApp."/>
+  if (catalogLoading || catalogError) return <section className="checkout">{meta}<p role="status">{catalogError || 'Conferindo o catálogo…'}</p></section>
   if (!rows.length) return <section className="checkout">{meta}
     <h1>{slug === null ? 'Carrinho sem produtos disponíveis' : 'Perfume indisponível para compra'}</h1>
     <Link className="btn-primary" to="/#produtos">Explorar perfumes</Link>
   </section>
   return <section className="checkout">
     {meta}
+    {adjustedOrder && <p role="status">O pedido foi ajustado conforme a disponibilidade atual da vitrine.</p>}
     <ol className="checkout-progress" aria-label="Etapas do pedido">{['Carrinho','Endereço','Revisão','WhatsApp'].map((name,i)=>
       <li key={name} aria-current={i===(review?2:1)?'step':undefined}>{name}</li>)}</ol>
     <h1 ref={title} tabIndex={-1}>{review?'Revisão do pedido':'Dados de entrega'}</h1>

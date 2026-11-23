@@ -14,7 +14,7 @@ export default function ProductCard({ p }: { p: Product }) {
   return (
     <article className="perfume-card group flex min-w-0 flex-col">
       <div className="relative overflow-hidden bg-petala">
-        <Link to={details} aria-label={`Ver detalhes de ${p.name}`} className="block"><img src={p.image} alt="" loading="lazy" className="aspect-square w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></Link>
+        <Link to={details} aria-label={`Ver detalhes de ${p.name}`} className="block"><img src={p.image} alt="" loading="lazy" className="aspect-square w-full object-contain" /></Link>
         {(!p.isDemo && (discounted || p.isNew)) && (
           <span className="absolute left-2 top-2 bg-nevoa px-2 py-1 text-xs font-medium">
             {discounted ? 'Promoção' : 'Lançamento'}

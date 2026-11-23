@@ -6,13 +6,16 @@ import { brl, priceOf } from '../utils/format'
 import { productPath } from '../utils/routes'
 
 export function CartContents({ close }: { close?: () => void }) {
-  const { cart, products, setQty, remove, total } = useStore()
+  const { cart, products, setQty, remove, total, catalogLoading, catalogError } = useStore()
   const rows = cart.map(item => ({ item, product: products.find(p => p.id === item.productId) }))
+
+  if (catalogLoading || catalogError) return <p className="p-5" role="status">{catalogError || 'Conferindo o catálogo…'}</p>
 
   return <>
     <div className={close ? 'flex-1 space-y-4 overflow-y-auto p-5' : 'space-y-4'}>
       {!rows.length && <p>Seu carrinho está vazio.</p>}
       {rows.map(({ item, product }) => {
+        const qty = Math.min(item.qty, product?.stock ?? Infinity)
         const name = product?.name ?? 'Produto removido da vitrine'
         return <div key={item.productId} className="cart-row">
           {product && <Link to={productPath(product.slug)} onClick={close} aria-label={'Ver ' + name}><img src={product.image} alt=""/></Link>}
@@ -20,14 +23,15 @@ export function CartContents({ close }: { close?: () => void }) {
             {product ? <Link to={productPath(product.slug)} onClick={close}>{name}</Link> : <p>{name}</p>}
             {product && <p className="text-sm">{brl(priceOf(product))} por unidade</p>}
             {!product?.available && <p className="text-sm">{product?.available === false ? 'Esgotado' : 'Indisponível para o pedido'}</p>}
+            {product?.available && qty < item.qty && <p className="text-sm">Apenas {qty} em estoque.</p>}
             <div className="cart-quantity">
               <button aria-label={'Diminuir quantidade de ' + name} onClick={() => setQty(item.productId, item.qty - 1)}><Minus size={16}/></button>
               <span>{item.qty}</span>
-              <button aria-label={'Aumentar quantidade de ' + name} disabled={!product?.available} onClick={() => setQty(item.productId, item.qty + 1)}><Plus size={16}/></button>
+              <button aria-label={'Aumentar quantidade de ' + name} disabled={!product?.available || item.qty >= (product.stock ?? Infinity)} onClick={() => setQty(item.productId, item.qty + 1)}><Plus size={16}/></button>
               <button aria-label={'Remover ' + name} onClick={() => remove(item.productId)}><Trash2 size={16}/></button>
             </div>
           </div>
-          {product?.available && <strong>{brl(priceOf(product) * item.qty)}</strong>}
+          {product?.available && <strong>{brl(priceOf(product) * qty)}</strong>}
         </div>
       })}
     </div>

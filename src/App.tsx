@@ -6,20 +6,23 @@ import Home from './pages/Home'
 import Checkout from './pages/Checkout'
 import ProductPage from './pages/ProductPage'
 import { About, Contact, NotFound, Cart } from './pages/StorePages'
+import Admin from './pages/Admin'
 import PageMeta from './components/PageMeta'
 
 function LegacyProduct() {
   const { slug } = useParams()
-  const { products } = useStore()
+  const { products, catalogLoading, catalogError } = useStore()
+  if (catalogLoading || catalogError) return <p className="boutique" role="status">{catalogError || 'Carregando catálogo…'}</p>
   const product = products.find(p => p.slug === slug || (p.isDemo && p.id === slug))
   return product ? <Navigate replace to={productPath(product.slug)}/> : <NotFound/>
 }
 
 function StoreHome() {
   const { search, hash } = useLocation()
-  const { products } = useStore()
+  const { products, catalogLoading, catalogError } = useStore()
   const slug = new URLSearchParams(search).get('perfume')
   if (slug) {
+    if (catalogLoading || catalogError) return <p className="boutique" role="status">{catalogError || 'Carregando catálogo…'}</p>
     const product = products.find(p => p.slug === slug || (p.isDemo && p.id === slug))
     return product ? <Navigate replace to={productPath(product.slug)}/> : <NotFound/>
   }
@@ -30,7 +33,7 @@ function StoreHome() {
 }
 
 export default function App() {
-  return <StoreProvider><BrowserRouter><Routes><Route element={<Layout/>}>
+  return <StoreProvider><BrowserRouter><Routes><Route path="admin" element={<Admin/>}/><Route element={<Layout/>}>
     <Route index element={<StoreHome/>}/>
     <Route path="novidades" element={<Navigate replace to="/#campanha"/>}/>
     <Route path="sobre" element={<About/>}/>

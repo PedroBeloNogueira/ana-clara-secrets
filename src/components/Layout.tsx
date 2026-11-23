@@ -2,6 +2,7 @@ import { BRAND_NAME } from '../data/brand'
 import { useEffect } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { Heart, MessageCircle, Search } from 'lucide-react'
+import Glitter from './Glitter'
 import IslandNav from './IslandNav'
 import CartDrawer from './CartDrawer'
 import { useStore } from '../contexts/StoreContext'
@@ -9,6 +10,13 @@ import { contactMessage, storeContact } from '../data/contact'
 import { waLink } from '../utils/whatsapp'
 
 export default function Layout() {
+  return <>
+    <Glitter/>
+    <div className="storefront"><StoreLayout/></div>
+  </>
+}
+
+function StoreLayout() {
   const { whatsapp, toast } = useStore()
   const { pathname, hash, key } = useLocation()
   const searchFocusKey = hash === '#pesquisar' ? key : ''

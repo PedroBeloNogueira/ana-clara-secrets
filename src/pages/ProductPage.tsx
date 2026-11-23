@@ -10,7 +10,8 @@ import { NotFound } from './StorePages'
 
 export default function ProductPage() {
   const { slug } = useParams()
-  const { products } = useStore()
+  const { products, catalogLoading, catalogError } = useStore()
+  if (catalogLoading || catalogError) return <p className="boutique" role="status">{catalogError || 'Carregando catálogo…'}</p>
   const product = products.find(p => p.slug === slug || (p.isDemo && p.id === slug))
   if (!product) return <NotFound/>
   if (product.slug !== slug) return <Navigate replace to={productPath(product.slug)}/>
